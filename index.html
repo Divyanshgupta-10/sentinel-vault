@@ -1,0 +1,1511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sentinel Vault | Military-Grade File Security</title>
+  <meta name="description" content="Sentinel Vault combines AES-256 encryption with LSB steganography to hide, lock, and share sensitive files.">
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  
+  <style>
+    /* CSS Variables */
+    :root {
+      --bg: #0a0a0f;
+      --surface: #111118;
+      --card: #16161f;
+      --border: #1e1e2e;
+      --indigo: #6366f1;
+      --indigo-bright: #818cf8;
+      --indigo-glow: rgba(99,102,241,0.2);
+      --violet: #8b5cf6;
+      --emerald: #10b981;
+      --rose: #f43f5e;
+      --amber: #f59e0b;
+      --text: #f8fafc;
+      --text-secondary: #94a3b8;
+      --text-muted: #475569;
+    }
+
+    /* Global Reset & Base */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    html {
+      scroll-behavior: smooth;
+    }
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      line-height: 1.5;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+    ::selection {
+      background: var(--indigo);
+      color: white;
+    }
+    a {
+      text-decoration: none;
+    }
+    .mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* Animations */
+    @keyframes pulse {
+      0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+      70% { transform: scale(1); box-shadow: 0 0 0 4px rgba(16, 185, 129, 0); }
+      100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+    }
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-6px); }
+    }
+    @keyframes spin { 
+      100% { transform: rotate(360deg); } 
+    }
+
+    /* Scroll Reveal Utilities */
+    .reveal {
+      opacity: 0;
+      transform: translateY(24px);
+      transition: all 0.6s ease;
+    }
+
+    /* SECTION 1: NAVBAR */
+    nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 64px;
+      background: rgba(10, 10, 15, 0.85);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      transition: all 0.3s ease;
+    }
+    .nav-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .nav-left svg {
+      width: 24px;
+      height: 24px;
+      color: var(--indigo);
+    }
+    .nav-brand {
+      color: white;
+      font-weight: 700;
+      font-size: 18px;
+      letter-spacing: 4px;
+    }
+    .nav-center {
+      display: flex;
+      gap: 32px;
+    }
+    .nav-link {
+      color: var(--text-secondary);
+      font-size: 14px;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+    .nav-link:hover {
+      color: white;
+    }
+    .nav-right .btn-download {
+      background: var(--indigo);
+      color: white;
+      padding: 9px 20px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 13px;
+      transition: all 0.2s;
+      display: inline-block;
+    }
+    .nav-right .btn-download:hover {
+      background: var(--indigo-bright);
+      box-shadow: 0 4px 20px rgba(99, 102, 241, 0.3);
+    }
+    .mobile-menu-btn {
+      display: none;
+      background: none;
+      border: none;
+      color: var(--text);
+      cursor: pointer;
+    }
+    .mobile-menu {
+      display: none;
+      position: absolute;
+      top: 64px;
+      left: 0;
+      width: 100%;
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      flex-direction: column;
+      padding: 16px 24px;
+      gap: 16px;
+    }
+    .mobile-menu.open {
+      display: flex;
+    }
+
+    /* SECTION 2: HERO */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg);
+      background-image: radial-gradient(ellipse 80% 50% at 50% -10%, rgba(99, 102, 241, 0.15), transparent);
+      padding: 120px 24px 60px;
+      text-align: center;
+    }
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(99, 102, 241, 0.1);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      color: var(--indigo-bright);
+      font-size: 12px;
+      padding: 5px 14px;
+      border-radius: 20px;
+      margin-bottom: 20px;
+    }
+    .hero-badge .dot {
+      width: 6px;
+      height: 6px;
+      background-color: var(--emerald);
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+    .hero-title {
+      font-size: clamp(42px, 6vw, 72px);
+      font-weight: 800;
+      color: white;
+      letter-spacing: -1.5px;
+      line-height: 1.1;
+    }
+    .hero-subtitle {
+      font-size: clamp(42px, 6vw, 72px);
+      font-weight: 800;
+      color: var(--indigo);
+      letter-spacing: -1.5px;
+      line-height: 1.1;
+      margin-top: 5px;
+    }
+    .hero-desc {
+      max-width: 560px;
+      font-size: 17px;
+      color: var(--text-secondary);
+      line-height: 1.7;
+      margin-top: 24px;
+    }
+    .hero-btns {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      margin-top: 36px;
+    }
+    .btn-primary {
+      background: var(--indigo);
+      color: white;
+      padding: 14px 28px;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.25s;
+    }
+    .btn-primary:hover {
+      background: var(--indigo-bright);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 32px rgba(99, 102, 241, 0.35);
+    }
+    .btn-ghost {
+      background: transparent;
+      color: var(--text-secondary);
+      border: 1px solid var(--border);
+      padding: 14px 28px;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.25s;
+    }
+    .btn-ghost:hover {
+      border-color: var(--indigo);
+      color: white;
+      background: rgba(99, 102, 241, 0.06);
+    }
+    .hero-version {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 12px;
+    }
+    
+    /* Hero Mockup Window */
+    .hero-mockup {
+      width: 100%;
+      max-width: 800px;
+      margin-top: 64px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: 0 40px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.05);
+      overflow: hidden;
+      animation: float 4s infinite ease-in-out;
+    }
+    .mockup-titlebar {
+      height: 40px;
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      gap: 6px;
+    }
+    .mockup-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+    .mockup-dot.red { background: var(--rose); }
+    .mockup-dot.yellow { background: var(--amber); }
+    .mockup-dot.green { background: var(--emerald); }
+    .mockup-title {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-left: 12px;
+    }
+    .mockup-content {
+      padding: 20px 24px;
+      display: flex;
+    }
+    .mockup-sidebar {
+      width: 48px;
+      background: #0d0d14;
+      border-right: 1px solid var(--border);
+      height: 180px;
+      margin-right: 20px;
+      border-radius: 6px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 12px 0;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+    .mockup-sidebar-item {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+    }
+    .mockup-sidebar-item:nth-child(odd) { background: rgba(99,102,241,0.2); }
+    .mockup-sidebar-item:nth-child(even) { background: rgba(71,85,105,0.2); }
+    
+    .mockup-main {
+      display: flex;
+      gap: 16px;
+      flex: 1;
+    }
+    .mockup-panel-left {
+      flex: 0 0 180px;
+      background: #0d0d14;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      padding: 16px;
+      height: 140px;
+    }
+    .mockup-input {
+      height: 24px;
+      background: #1a1a28;
+      border-radius: 4px;
+      margin-bottom: 8px;
+      width: 100%;
+    }
+    .mockup-btn {
+      height: 32px;
+      background: var(--indigo);
+      border-radius: 6px;
+      width: 100%;
+    }
+    .mockup-panel-right {
+      flex: 1;
+      background: #080810;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      padding: 16px;
+      height: 140px;
+      font-size: 11px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .mockup-log {
+      height: 14px;
+      background: rgba(255,255,255,0.03);
+      border-radius: 2px;
+      border-left: 2px solid transparent;
+    }
+
+    /* SECTION 3: STATS */
+    .stats {
+      width: 100%;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      padding: 32px 0;
+      display: flex;
+      justify-content: center;
+      gap: 80px;
+      flex-wrap: wrap;
+    }
+    .stat-item {
+      text-align: center;
+    }
+    .stat-num {
+      font-size: 36px;
+      font-weight: 800;
+      color: var(--indigo);
+    }
+    .stat-label {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-top: 4px;
+      letter-spacing: 0.5px;
+    }
+
+    /* SECTION 4: FEATURES */
+    .features {
+      padding: 100px 0;
+      background: var(--bg);
+    }
+    .section-header {
+      text-align: center;
+      margin-bottom: 64px;
+      padding: 0 24px;
+    }
+    .section-title {
+      font-size: clamp(28px, 4vw, 42px);
+      font-weight: 700;
+    }
+    .section-subtitle {
+      font-size: 17px;
+      color: var(--text-muted);
+      margin-top: 12px;
+    }
+    .features-grid {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 24px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
+    .feature-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 28px 24px;
+      transition: all 0.2s;
+      cursor: default;
+    }
+    .feature-card:hover {
+      border-color: rgba(99, 102, 241, 0.4);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+      transform: translateY(-2px);
+    }
+    .feature-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 16px;
+    }
+    .feature-icon svg { width: 20px; height: 20px; }
+    .feature-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: white;
+      margin-bottom: 8px;
+    }
+    .feature-desc {
+      font-size: 14px;
+      color: #64748b;
+      line-height: 1.6;
+    }
+
+    /* SECTION 5: HOW IT WORKS */
+    .how-it-works {
+      padding: 100px 0;
+      background: #0d0d14;
+    }
+    .steps-container {
+      max-width: 900px;
+      margin: 60px auto 0;
+      display: flex;
+      gap: 0;
+      align-items: flex-start;
+      position: relative;
+    }
+    .step {
+      flex: 1;
+      text-align: center;
+      padding: 0 24px;
+      position: relative;
+    }
+    .step-circle {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      border: 2px solid rgba(99, 102, 241, 0.4);
+      background: rgba(99, 102, 241, 0.08);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 20px;
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--indigo);
+      position: relative;
+      z-index: 2;
+    }
+    .step-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: white;
+      margin-bottom: 8px;
+    }
+    .step-desc {
+      font-size: 13px;
+      color: #64748b;
+      line-height: 1.6;
+    }
+    .steps-container::before {
+      content: '';
+      position: absolute;
+      top: 30px;
+      left: 10%;
+      right: 10%;
+      height: 2px;
+      background: var(--border);
+      z-index: 1;
+    }
+
+    /* SECTION 6: SECURITY */
+    .security {
+      padding: 100px 0;
+      background: var(--bg);
+    }
+    .security-grid {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 24px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 60px;
+      align-items: center;
+    }
+    .sec-eyebrow {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--indigo);
+      letter-spacing: 2px;
+    }
+    .sec-title {
+      font-size: clamp(26px, 3.5vw, 38px);
+      font-weight: 700;
+      margin-top: 12px;
+    }
+    .sec-desc {
+      font-size: 15px;
+      color: #64748b;
+      line-height: 1.8;
+      margin-top: 16px;
+    }
+    .sec-points {
+      margin-top: 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .sec-point {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+    .sec-point svg {
+      width: 16px;
+      height: 16px;
+      color: var(--emerald);
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+    .sec-point span {
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+    .sec-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 28px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+    }
+    .sec-card-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+      letter-spacing: 1px;
+      margin-bottom: 24px;
+    }
+    .arch-node {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    .arch-node-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .arch-icon {
+      width: 36px;
+      height: 36px;
+      background: rgba(99, 102, 241, 0.1);
+      border: 1px solid rgba(99, 102, 241, 0.2);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .arch-icon svg { width: 18px; height: 18px; }
+    .arch-text strong { display: block; font-size: 14px; color: white; font-weight: 600; }
+    .arch-text span { font-size: 12px; color: var(--text-muted); }
+    .arch-badge {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 8px;
+      border-radius: 4px;
+    }
+    .badge-green { color: var(--emerald); background: rgba(16, 185, 129, 0.1); }
+    .badge-yellow { color: var(--amber); background: rgba(245, 158, 11, 0.1); }
+    .badge-red { color: var(--rose); background: rgba(244, 63, 94, 0.1); }
+    .arch-arrow {
+      text-align: center;
+      color: var(--border);
+      margin: 8px auto;
+    }
+    .arch-arrow svg { width: 20px; height: 20px; }
+
+    /* SECTION 7: DOWNLOAD */
+    .download {
+      padding: 100px 0;
+      background: #0d0d14;
+    }
+    .dl-card {
+      max-width: 680px;
+      margin: auto;
+      background: var(--surface);
+      border: 1px solid rgba(99, 102, 241, 0.2);
+      border-radius: 20px;
+      padding: 56px 48px;
+      text-align: center;
+      box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.05), 0 40px 80px rgba(0,0,0,0.4);
+      position: relative;
+      overflow: hidden;
+      z-index: 1;
+    }
+    .dl-card-container {
+      padding: 0 24px;
+    }
+    .dl-card::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 400px;
+      height: 400px;
+      background: radial-gradient(circle, rgba(99, 102, 241, 0.12), transparent 70%);
+      pointer-events: none;
+      z-index: -1;
+    }
+    .dl-icon {
+      width: 56px;
+      height: 56px;
+      color: var(--indigo);
+      margin-bottom: 20px;
+    }
+    .dl-title {
+      font-size: 32px;
+      font-weight: 700;
+      color: white;
+    }
+    .dl-subtitle {
+      font-size: 15px;
+      color: #64748b;
+      margin-top: 10px;
+    }
+    .dl-pill {
+      margin-top: 20px;
+      display: inline-block;
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.2);
+      color: var(--emerald);
+      padding: 5px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .dl-btn {
+      margin-top: 28px;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      color: white;
+      padding: 16px 36px;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+      transition: all 0.25s;
+      text-decoration: none;
+    }
+    .dl-btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 40px rgba(99, 102, 241, 0.4);
+    }
+    .dl-btn svg { width: 20px; height: 20px; }
+    .dl-info {
+      font-size: 12px;
+      color: #334155;
+      margin-top: 12px;
+    }
+    .dl-reqs {
+      margin-top: 36px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      text-align: left;
+    }
+    .dl-req {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .dl-req svg { width: 12px; height: 12px; color: var(--emerald); flex-shrink: 0; }
+    .dl-req span { font-size: 13px; color: #64748b; }
+
+    /* SECTION 8: CONTACT */
+    .contact {
+      padding: 100px 0;
+      background: var(--bg);
+    }
+    .contact-grid {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 0 24px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 32px;
+    }
+    .contact-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 32px;
+    }
+    .contact-card-title {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 24px;
+    }
+    .contact-row {
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+      margin-bottom: 20px;
+    }
+    .contact-icon {
+      width: 36px;
+      height: 36px;
+      background: rgba(99, 102, 241, 0.1);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .contact-icon.violet { background: rgba(139, 92, 246, 0.1); color: var(--violet); }
+    .contact-icon.emerald { background: rgba(16, 185, 129, 0.1); color: var(--emerald); }
+    .contact-icon svg { width: 18px; height: 18px; color: var(--indigo); }
+    .contact-icon.violet svg { color: var(--violet); }
+    .contact-icon.emerald svg { color: var(--emerald); }
+    .contact-label {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+    .contact-val {
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin-top: 2px;
+    }
+    .contact-link { color: var(--indigo-bright); text-decoration: none; }
+    .team-sec {
+      margin-top: 28px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+    }
+    .team-label {
+      font-size: 11px;
+      color: #334155;
+      letter-spacing: 1px;
+      font-weight: 700;
+    }
+    .team-member {
+      margin-top: 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+    .team-avatar {
+      width: 36px;
+      height: 36px;
+      background: rgba(99, 102, 241, 0.15);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      color: var(--indigo-bright);
+      font-size: 13px;
+    }
+    .team-name { font-size: 14px; font-weight: 600; color: white; }
+    .team-role { font-size: 12px; color: var(--text-muted); }
+    
+    .form-field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 16px;
+    }
+    .form-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 600;
+      letter-spacing: 0.8px;
+    }
+    .form-input, .form-select, .form-textarea {
+      width: 100%;
+      background: #0d0d14;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 11px 14px;
+      color: var(--text);
+      font-size: 14px;
+      outline: none;
+      font-family: inherit;
+      transition: all 0.2s;
+    }
+    .form-input:focus, .form-select:focus, .form-textarea:focus {
+      border-color: var(--indigo);
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+    }
+    .form-input::placeholder, .form-textarea::placeholder {
+      color: #334155;
+    }
+    .form-select option { background: #16161f; color: var(--text); }
+    .form-textarea { resize: vertical; }
+    .btn-submit {
+      width: 100%;
+      padding: 12px;
+      background: var(--indigo);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .btn-submit:hover {
+      background: var(--indigo-bright);
+      transform: translateY(-1px);
+    }
+    .btn-submit svg { width: 16px; height: 16px; }
+
+    /* SECTION 9: FOOTER */
+    footer {
+      background: #080810;
+      border-top: 1px solid var(--border);
+      padding: 48px 0 32px;
+    }
+    .footer-content {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+    .footer-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      gap: 40px;
+      margin-bottom: 40px;
+    }
+    .footer-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      font-size: 18px;
+      letter-spacing: 4px;
+      color: white;
+    }
+    .footer-logo svg { width: 24px; height: 24px; color: var(--indigo); }
+    .footer-desc {
+      max-width: 260px;
+      font-size: 13px;
+      color: #334155;
+      line-height: 1.6;
+      margin-top: 12px;
+    }
+    .footer-links {
+      display: flex;
+      gap: 60px;
+    }
+    .footer-col-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: #334155;
+      letter-spacing: 1.5px;
+      margin-bottom: 14px;
+    }
+    .footer-link {
+      font-size: 13px;
+      color: var(--text-muted);
+      text-decoration: none;
+      display: block;
+      margin-bottom: 8px;
+      transition: color 0.2s;
+    }
+    .footer-link:hover { color: white; }
+    .footer-newsletter-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: white;
+      margin-bottom: 12px;
+    }
+    .footer-form {
+      display: flex;
+      gap: 8px;
+    }
+    .footer-input {
+      padding: 9px 14px;
+      background: #111118;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: white;
+      font-size: 13px;
+      width: 200px;
+      outline: none;
+    }
+    .footer-input:focus { border-color: var(--indigo); }
+    .footer-input::placeholder { color: #334155; }
+    .footer-btn {
+      padding: 9px 16px;
+      background: var(--indigo);
+      border: none;
+      border-radius: 8px;
+      color: white;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .footer-btn:hover { background: var(--indigo-bright); }
+    .footer-bottom {
+      border-top: 1px solid var(--border);
+      padding-top: 24px;
+      margin-top: 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .footer-bottom p {
+      font-size: 12px;
+      color: #334155;
+    }
+
+    /* RESPONSIVE */
+    @media (max-width: 1024px) {
+      .features-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 768px) {
+      .nav-center, .nav-right { display: none; }
+      .mobile-menu-btn { display: block; }
+      .hero-title, .hero-subtitle { font-size: clamp(36px, 10vw, 48px); }
+      .hero-btns { flex-direction: column; }
+      .stats { gap: 40px; padding: 32px 24px; flex-direction: column; }
+      .features-grid { grid-template-columns: 1fr; }
+      .steps-container { flex-direction: column; gap: 40px; }
+      .steps-container::before {
+        top: 0; bottom: 0; left: 54px; width: 2px; height: auto;
+      }
+      .step { display: flex; text-align: left; align-items: flex-start; gap: 20px; }
+      .step-circle { margin: 0; flex-shrink: 0; width: 48px; height: 48px; font-size: 16px; }
+      .security-grid { grid-template-columns: 1fr; gap: 40px; }
+      .dl-reqs { grid-template-columns: 1fr; }
+      .contact-grid { grid-template-columns: 1fr; }
+      .footer-top { flex-direction: column; gap: 40px; }
+      .footer-links { flex-direction: column; gap: 32px; }
+      .footer-form { flex-direction: column; }
+      .footer-input { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- SECTION 1: NAVBAR -->
+  <nav>
+    <div class="nav-left">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      <span class="nav-brand">SENTINEL</span>
+    </div>
+    <div class="nav-center">
+      <a href="#features" class="nav-link">Features</a>
+      <a href="#how-it-works" class="nav-link">How It Works</a>
+      <a href="#security" class="nav-link">Security</a>
+      <a href="#download" class="nav-link">Download</a>
+      <a href="#contact" class="nav-link">Contact</a>
+    </div>
+    <div class="nav-right">
+      <a href="#download" class="btn-download">Download Now</a>
+    </div>
+    <button class="mobile-menu-btn" onclick="toggleMenu()">
+      <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+    </button>
+  </nav>
+
+  <!-- Mobile Menu Dropdown -->
+  <div class="mobile-menu" id="mobileMenu">
+    <a href="#features" class="nav-link" onclick="toggleMenu()">Features</a>
+    <a href="#how-it-works" class="nav-link" onclick="toggleMenu()">How It Works</a>
+    <a href="#security" class="nav-link" onclick="toggleMenu()">Security</a>
+    <a href="#download" class="nav-link" onclick="toggleMenu()">Download</a>
+    <a href="#contact" class="nav-link" onclick="toggleMenu()">Contact</a>
+  </div>
+
+  <!-- SECTION 2: HERO -->
+  <section class="hero">
+    <div class="hero-badge reveal">
+      <div class="dot"></div>
+      v2.0 — Now Available
+    </div>
+    <h1 class="hero-title reveal">Military-Grade File Security.</h1>
+    <div class="hero-subtitle reveal">Built for the Modern Operator.</div>
+    <p class="hero-desc reveal">Sentinel Vault combines AES-256 encryption with LSB steganography to hide, lock, and share sensitive files — with live permission control from anywhere in the world.</p>
+    
+    <div class="hero-btns reveal">
+      <a href="#download" class="btn-primary">
+        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+        Download for Windows
+      </a>
+      <a href="https://github.com" target="_blank" class="btn-ghost">
+        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>
+        View on GitHub
+      </a>
+    </div>
+    <div class="hero-version reveal">Windows 10/11 · v2.0.0 · Free Download · 142 MB</div>
+
+    <div class="hero-mockup reveal">
+      <div class="mockup-titlebar">
+        <div class="mockup-dot red"></div>
+        <div class="mockup-dot yellow"></div>
+        <div class="mockup-dot green"></div>
+        <div class="mockup-title mono">sentinel-ui</div>
+      </div>
+      <div class="mockup-content">
+        <div class="mockup-sidebar">
+          <div class="mockup-sidebar-item"></div>
+          <div class="mockup-sidebar-item"></div>
+          <div class="mockup-sidebar-item"></div>
+          <div class="mockup-sidebar-item"></div>
+          <div class="mockup-sidebar-item"></div>
+        </div>
+        <div class="mockup-main">
+          <div class="mockup-panel-left">
+            <div class="mockup-input"></div>
+            <div class="mockup-input"></div>
+            <div class="mockup-input"></div>
+            <div class="mockup-btn"></div>
+          </div>
+          <div class="mockup-panel-right mono">
+            <div class="mockup-log" style="width: 90%; border-left-color: #6366f1;"></div>
+            <div class="mockup-log" style="width: 75%; border-left-color: #10b981;"></div>
+            <div class="mockup-log" style="width: 85%; border-left-color: #10b981;"></div>
+            <div class="mockup-log" style="width: 60%; border-left-color: #8b5cf6;"></div>
+            <div class="mockup-log" style="width: 80%; border-left-color: #10b981;"></div>
+            <div class="mockup-log" style="width: 70%; border-left-color: #94a3b8;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 3: STATS BAR -->
+  <section class="stats">
+    <div class="stat-item reveal">
+      <div class="stat-num">AES-256</div>
+      <div class="stat-label">Encryption Standard</div>
+    </div>
+    <div class="stat-item reveal">
+      <div class="stat-num">LSB</div>
+      <div class="stat-label">Steganography Method</div>
+    </div>
+    <div class="stat-item reveal">
+      <div class="stat-num">0</div>
+      <div class="stat-label">Plain Text Stored</div>
+    </div>
+    <div class="stat-item reveal">
+      <div class="stat-num">100%</div>
+      <div class="stat-label">Local Processing</div>
+    </div>
+  </section>
+
+  <!-- SECTION 4: FEATURES -->
+  <section class="features" id="features">
+    <div class="section-header reveal">
+      <h2 class="section-title">Everything you need to stay secure</h2>
+      <div class="section-subtitle">Built for operators who take security seriously.</div>
+    </div>
+    <div class="features-grid">
+      <div class="feature-card reveal">
+        <div class="feature-icon" style="background: rgba(99,102,241,0.12); color: #6366f1;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+        </div>
+        <div class="feature-title">AES-256 Encryption</div>
+        <div class="feature-desc">Military-grade symmetric encryption locks every file with a unique 256-bit master key. Impossible to brute-force.</div>
+      </div>
+      <div class="feature-card reveal">
+        <div class="feature-icon" style="background: rgba(139,92,246,0.12); color: #8b5cf6;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+        </div>
+        <div class="feature-title">LSB Steganography</div>
+        <div class="feature-desc">Hide encrypted keys inside ordinary images using Least Significant Bit encoding. The key is invisible to the naked eye.</div>
+      </div>
+      <div class="feature-card reveal">
+        <div class="feature-icon" style="background: rgba(16,185,129,0.12); color: #10b981;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+        </div>
+        <div class="feature-title">Live Permission Control</div>
+        <div class="feature-desc">Approve or deny decryption requests in real-time from anywhere using Firebase-powered cloud permissions.</div>
+      </div>
+      <div class="feature-card reveal">
+        <div class="feature-icon" style="background: rgba(245,158,11,0.12); color: #f59e0b;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+        </div>
+        <div class="feature-title">Multi-Operator Support</div>
+        <div class="feature-desc">Register multiple operators with individual accounts. Data isolation ensures each operator only sees their own packages.</div>
+      </div>
+      <div class="feature-card reveal">
+        <div class="feature-icon" style="background: rgba(244,63,94,0.12); color: #f43f5e;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0011 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 11-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 002.5 2.5z"></path></svg>
+        </div>
+        <div class="feature-title">Burn After Read</div>
+        <div class="feature-desc">Automatically destroy permission records after a message is extracted. Zero evidence left behind.</div>
+      </div>
+      <div class="feature-card reveal">
+        <div class="feature-icon" style="background: rgba(99,102,241,0.12); color: #6366f1;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path></svg>
+        </div>
+        <div class="feature-title">Offline-First Architecture</div>
+        <div class="feature-desc">SQLite-powered local authentication means the app works fully offline. No cloud dependency for core operations.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 5: HOW IT WORKS -->
+  <section class="how-it-works" id="how-it-works">
+    <div class="section-header reveal">
+      <h2 class="section-title">How Sentinel Vault Works</h2>
+    </div>
+    <div class="steps-container reveal">
+      <div class="step">
+        <div class="step-circle">1</div>
+        <div class="step-title">Encrypt</div>
+        <div class="step-desc">Select your target folder. Sentinel generates a master key and locks every file with AES-256 encryption.</div>
+      </div>
+      <div class="step">
+        <div class="step-circle">2</div>
+        <div class="step-title">Hide the Key</div>
+        <div class="step-desc">The master key is invisibly embedded into a cover image using LSB steganography. The image looks unchanged.</div>
+      </div>
+      <div class="step">
+        <div class="step-circle">3</div>
+        <div class="step-title">Share Securely</div>
+        <div class="step-desc">Send the stego-image and a Share ID to your recipient via any channel. Neither alone can unlock the files.</div>
+      </div>
+      <div class="step">
+        <div class="step-circle">4</div>
+        <div class="step-title">Approve & Decrypt</div>
+        <div class="step-desc">The recipient requests access. You approve in real-time. Their Sentinel client downloads and decrypts everything automatically.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 6: SECURITY -->
+  <section class="security" id="security">
+    <div class="security-grid">
+      <div class="sec-left reveal">
+        <div class="sec-eyebrow">ZERO-KNOWLEDGE ARCHITECTURE</div>
+        <h2 class="sec-title">No central server ever sees your data.</h2>
+        <p class="sec-desc">Sentinel Vault was architected around a fundamental principle: if there's nothing to steal, there's nothing to hack. Your files never leave your machine. Encryption happens locally. The cloud only holds permission IDs — never the keys, never the data.</p>
+        <div class="sec-points">
+          <div class="sec-point">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+            <span>Files are encrypted locally before any network activity occurs</span>
+          </div>
+          <div class="sec-point">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+            <span>Master keys are hidden in images — never stored in any database</span>
+          </div>
+          <div class="sec-point">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+            <span>Firebase only stores permission status, not encrypted content</span>
+          </div>
+        </div>
+      </div>
+      <div class="sec-right reveal">
+        <div class="sec-card">
+          <div class="sec-card-title">Data Flow Architecture</div>
+          
+          <div class="arch-node">
+            <div class="arch-node-left">
+              <div class="arch-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #6366f1;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+              </div>
+              <div class="arch-text">
+                <strong>Your Machine</strong>
+                <span>AES-256 + LSB Processing</span>
+              </div>
+            </div>
+            <div class="arch-badge badge-green">LOCAL</div>
+          </div>
+          
+          <div class="arch-arrow">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
+          </div>
+          
+          <div class="arch-node">
+            <div class="arch-node-left">
+              <div class="arch-icon" style="background: rgba(139,92,246,0.1); border-color: rgba(139,92,246,0.2);">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #8b5cf6;"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+              </div>
+              <div class="arch-text">
+                <strong>Stego Image</strong>
+                <span>Transmitted via WhatsApp/Email</span>
+              </div>
+            </div>
+            <div class="arch-badge badge-yellow">ENCRYPTED</div>
+          </div>
+          
+          <div class="arch-arrow">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
+          </div>
+          
+          <div class="arch-node">
+            <div class="arch-node-left">
+              <div class="arch-icon" style="background: rgba(59,130,246,0.1); border-color: rgba(59,130,246,0.2);">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #3b82f6;"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"></path></svg>
+              </div>
+              <div class="arch-text">
+                <strong>Firebase Firestore</strong>
+                <span>Stores only permission IDs</span>
+              </div>
+            </div>
+            <div class="arch-badge badge-red">NO RAW DATA</div>
+          </div>
+          
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 7: DOWNLOAD -->
+  <section class="download" id="download">
+    <div class="dl-card-container">
+      <div class="dl-card reveal">
+        <svg class="dl-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        <h2 class="dl-title">Download Sentinel Vault</h2>
+        <div class="dl-subtitle">Free to use. No subscription. No cloud storage required.</div>
+        
+        <div class="dl-pill">v2.0.0 — Latest Stable</div>
+        
+        <br>
+        
+        <a href="https://drive.google.com/uc?export=download&id=1j-FxKWdpIsYWfEpZ-gCgus2cqbMWd-Y-" style="background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; padding: 16px 36px; border-radius: 12px; font-size: 16px; font-weight: 700; border: none; cursor: pointer; transition: all 0.25s; text-decoration: none; display: inline-flex; align-items: center; gap: 10px;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          Download for Windows
+        </a>
+        
+        <div class="dl-info">.exe · 142 MB · Windows 10/11 · x64</div>
+        
+        <div class="dl-reqs">
+          <div class="dl-req">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            <span>Windows 10 or Windows 11</span>
+          </div>
+          <div class="dl-req">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            <span>Java 17 or higher installed</span>
+          </div>
+          <div class="dl-req">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            <span>64-bit processor</span>
+          </div>
+          <div class="dl-req">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            <span>100 MB disk space minimum</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 8: CONTACT -->
+  <section class="contact" id="contact">
+    <div class="section-header reveal">
+      <h2 class="section-title">Get in Touch</h2>
+      <div class="section-subtitle">Have a question or found a bug? We're here to help.</div>
+    </div>
+    
+    <div class="contact-grid">
+      <div class="contact-card reveal">
+        <div class="contact-card-title">Contact Information</div>
+        
+        <div class="contact-row">
+          <div class="contact-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+          </div>
+          <div>
+            <div class="contact-label">EMAIL SUPPORT</div>
+            <div class="contact-val">support@sentinelvault.dev</div>
+          </div>
+        </div>
+        
+        <div class="contact-row">
+          <div class="contact-icon violet">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>
+          </div>
+          <div>
+            <div class="contact-label">GITHUB REPOSITORY</div>
+            <div class="contact-val"><a href="https://github.com/sentinel-vault" class="contact-link">github.com/sentinel-vault</a></div>
+          </div>
+        </div>
+        
+        <div class="contact-row">
+          <div class="contact-icon emerald">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+          </div>
+          <div>
+            <div class="contact-label">SECURITY REPORTS</div>
+            <div class="contact-val">security@sentinelvault.dev</div>
+          </div>
+        </div>
+        
+        <div class="team-sec">
+          <div class="team-label">BUILT BY</div>
+          <div class="team-member">
+            <div class="team-avatar">D</div>
+            <div>
+              <div class="team-name">Divyansh Gupta</div>
+              <div class="team-role">Lead Engineer</div>
+            </div>
+          </div>
+          <div class="team-member">
+            <div class="team-avatar">A</div>
+            <div>
+              <div class="team-name">Abhinav Sheetal</div>
+              <div class="team-role">Security Engineer</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="contact-card reveal" id="contactFormContainer">
+        <div class="contact-card-title">Send a Message</div>
+        <form id="contactForm" onsubmit="submitForm(event)">
+          <div class="form-field">
+            <label class="form-label">YOUR NAME</label>
+            <input type="text" class="form-input" placeholder="John Doe" required>
+          </div>
+          <div class="form-field">
+            <label class="form-label">EMAIL ADDRESS</label>
+            <input type="email" class="form-input" placeholder="john@example.com" required>
+          </div>
+          <div class="form-field">
+            <label class="form-label">ISSUE TYPE</label>
+            <select class="form-select">
+              <option>General Question</option>
+              <option>Bug Report</option>
+              <option>Feature Request</option>
+              <option>Security Vulnerability</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label class="form-label">MESSAGE</label>
+            <textarea class="form-textarea" rows="4" placeholder="How can we help?" required></textarea>
+          </div>
+          <button type="submit" class="btn-submit">
+            <span>Send Message</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+          </button>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 9: FOOTER -->
+  <footer>
+    <div class="footer-content">
+      <div class="footer-top">
+        <div>
+          <div class="footer-logo">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            SENTINEL
+          </div>
+          <div class="footer-desc">Identity-Based File Integrity System. Built as an academic research project by Divyansh Gupta & Abhinav Sheetal.</div>
+        </div>
+        
+        <div class="footer-links">
+          <div>
+            <div class="footer-col-title">PRODUCT</div>
+            <a href="#features" class="footer-link">Features</a>
+            <a href="#how-it-works" class="footer-link">How It Works</a>
+            <a href="#download" class="footer-link">Download</a>
+            <a href="#" class="footer-link">Changelog</a>
+          </div>
+          <div>
+            <div class="footer-col-title">SUPPORT</div>
+            <a href="#" class="footer-link">Documentation</a>
+            <a href="#contact" class="footer-link">Bug Reports</a>
+            <a href="https://github.com/sentinel-vault" class="footer-link">GitHub</a>
+            <a href="#contact" class="footer-link">Contact</a>
+          </div>
+        </div>
+        
+        <div>
+          <div class="footer-newsletter-title">Stay Updated</div>
+          <div class="footer-form">
+            <input type="email" class="footer-input" placeholder="your@email.com">
+            <button class="footer-btn">Subscribe</button>
+          </div>
+        </div>
+      </div>
+      
+      <div class="footer-bottom">
+        <p>© 2026 Sentinel Vault. Built by Divyansh Gupta & Abhinav Sheetal.</p>
+        <p>v2.0.0 · Academic Research Project · Symbiosis Institute of Technology</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- SECTION 10: SCRIPTS -->
+  <script>
+    // 1. Smooth scroll for all anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(a => {
+      a.addEventListener('click', e => {
+        e.preventDefault();
+        const targetId = a.getAttribute('href');
+        if (targetId && targetId !== '#') {
+          const targetElement = document.querySelector(targetId);
+          if (targetElement) {
+            targetElement.scrollIntoView({ behavior: 'smooth' });
+          }
+        }
+      });
+    });
+
+    // 2. Navbar background on scroll
+    window.addEventListener('scroll', () => {
+      const nav = document.querySelector('nav');
+      if (window.scrollY > 60) {
+        nav.style.background = 'rgba(8,8,16,0.98)';
+      } else {
+        nav.style.background = 'rgba(10,10,15,0.85)';
+      }
+    });
+
+    // 3. Fade-in on scroll (Intersection Observer)
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry, i) => {
+        if (entry.isIntersecting) {
+          setTimeout(() => {
+            entry.target.style.opacity = '1';
+            entry.target.style.transform = 'translateY(0)';
+          }, i * 80);
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.1 });
+    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+    // 4. Mobile hamburger menu
+    function toggleMenu() {
+      document.getElementById('mobileMenu').classList.toggle('open');
+    }
+
+    // 6. Contact Form Submit
+    function submitForm(e) {
+      e.preventDefault();
+      const container = document.getElementById('contactFormContainer');
+      container.innerHTML = `
+        <div style="text-align:center;padding:32px 0;height:100%;display:flex;flex-direction:column;justify-content:center;">
+          <div style="font-size:40px;margin-bottom:12px;color:#10b981;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="width:48px;height:48px;"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          </div>
+          <div style="font-size:16px;font-weight:600;color:#f8fafc">Message sent!</div>
+          <div style="font-size:13px;color:#64748b;margin-top:8px">We will get back to you within 24 hours.</div>
+        </div>
+      `;
+    }
+  </script>
+</body>
+</html>
